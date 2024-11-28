@@ -29,6 +29,16 @@ exports.useTriangleParticles = true;
 exports.followMouse = true;
 
 exports.speed = 1;
+
+// Performance settings
+exports.useInstancing = true;  // Use instanced rendering for better performance
+exports.batchSize = 1024;      // Batch size for updates
+exports.useVAOs = true;        // Use Vertex Array Objects when available
+exports.skipFrames = {         // Skip frames based on particle count
+    '2m': 1,
+    '4m': 2
+};
+
 exports.dieSpeed = 0.015;
 exports.radius = amountInfo[2];
 exports.curlSize = 0.02;

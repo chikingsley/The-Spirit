@@ -96,13 +96,18 @@ function init(renderer) {
         format: THREE.RGBAFormat,
         type: THREE.FloatType,
         depthBuffer: false,
-        stencilBuffer: false
+        stencilBuffer: false,
+        generateMipmaps: false
     });
 
     _positionRenderTarget2 = _positionRenderTarget.clone();
     _copyTexture(_createPositionTexture(), _positionRenderTarget);
     _copyTexture(_positionRenderTarget, _positionRenderTarget2);
 
+    // Use VAOs for faster attribute binding
+    if (_renderer.capabilities.isWebGL2) {
+        _renderer.getContext().createVertexArray();
+    }
 }
 
 function _copyTexture(input, output) {
