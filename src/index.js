@@ -65,13 +65,35 @@ function init() {
     settings.mouse3d = _ray.origin;
 
     _renderer = new THREE.WebGLRenderer({
-        // transparent : true,
-        // premultipliedAlpha : false,
-        antialias : true
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance"
     });
     _renderer.setClearColor(settings.bgColor);
     _renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     _renderer.shadowMap.enabled = true;
+    
+    // Check WebGL capabilities
+    const gl = _renderer.getContext();
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    if (debugInfo) {
+        console.log('Renderer:', gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL));
+        console.log('Vendor:', gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL));
+    }
+    
+    // Check for required extensions
+    const hasFloatTextures = !!gl.getExtension('OES_texture_float');
+    const hasFloatLinear = !!gl.getExtension('OES_texture_float_linear');
+    const hasVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) > 0;
+    
+    if (!hasFloatTextures || !hasFloatLinear || !hasVertexTextures) {
+        console.error('Required WebGL features not available:');
+        console.error('Float Textures:', hasFloatTextures);
+        console.error('Float Linear:', hasFloatLinear);
+        console.error('Vertex Textures:', hasVertexTextures);
+        alert('Your browser does not support required WebGL features. The animation may not work correctly.');
+    }
+    
     document.body.appendChild(_renderer.domElement);
 
     _scene = new THREE.Scene();

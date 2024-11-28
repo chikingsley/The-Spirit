@@ -38,14 +38,16 @@ function init(renderer) {
     var rawShaderPrefix = 'precision ' + renderer.capabilities.precision + ' float;\n';
 
     var gl = _renderer.getContext();
-    if ( !gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) ) {
-        alert( 'No support for vertex shader textures!' );
+    
+    // Verify texture support
+    if (!gl.getExtension('OES_texture_float')) {
+        console.error('OES_texture_float not supported');
+        alert('Float textures not supported - particles may not work');
         return;
     }
-    if ( !gl.getExtension( 'OES_texture_float' )) {
-        alert( 'No OES_texture_float support for float textures!' );
-        return;
-    }
+    
+    // Get float linear filtering if available
+    gl.getExtension('OES_texture_float_linear');
 
     _scene = new THREE.Scene();
     _camera = new THREE.Camera();
@@ -53,8 +55,8 @@ function init(renderer) {
 
     _copyShader = new THREE.RawShaderMaterial({
         uniforms: {
-            resolution: { type: 'v2', value: new THREE.Vector2( TEXTURE_WIDTH, TEXTURE_HEIGHT ) },
-            texture: { type: 't', value: undef }
+            resolution: { type: 'v2', value: new THREE.Vector2(TEXTURE_WIDTH, TEXTURE_HEIGHT) },
+            texture: { type: 't', value: null }
         },
         vertexShader: rawShaderPrefix + shaderParse(glslify('../glsl/quad.vert')),
         fragmentShader: rawShaderPrefix + shaderParse(glslify('../glsl/through.frag'))
@@ -62,9 +64,9 @@ function init(renderer) {
 
     _positionShader = new THREE.RawShaderMaterial({
         uniforms: {
-            resolution: { type: 'v2', value: new THREE.Vector2( TEXTURE_WIDTH, TEXTURE_HEIGHT ) },
-            texturePosition: { type: 't', value: undef },
-            textureDefaultPosition: { type: 't', value: undef },
+            resolution: { type: 'v2', value: new THREE.Vector2(TEXTURE_WIDTH, TEXTURE_HEIGHT) },
+            texturePosition: { type: 't', value: null },
+            textureDefaultPosition: { type: 't', value: null },
             mouse3d: { type: 'v3', value: new THREE.Vector3 },
             speed: { type: 'f', value: 1 },
             dieSpeed: { type: 'f', value: 0 },
@@ -82,9 +84,10 @@ function init(renderer) {
         depthTest: false
     });
 
-    _mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2, 2 ), _copyShader );
-    _scene.add( _mesh );
+    _mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), _copyShader);
+    _scene.add(_mesh);
 
+    // Create render targets with proper texture parameters
     _positionRenderTarget = new THREE.WebGLRenderTarget(TEXTURE_WIDTH, TEXTURE_HEIGHT, {
         wrapS: THREE.ClampToEdgeWrapping,
         wrapT: THREE.ClampToEdgeWrapping,
@@ -92,10 +95,10 @@ function init(renderer) {
         magFilter: THREE.NearestFilter,
         format: THREE.RGBAFormat,
         type: THREE.FloatType,
-        depthWrite: false,
         depthBuffer: false,
         stencilBuffer: false
     });
+
     _positionRenderTarget2 = _positionRenderTarget.clone();
     _copyTexture(_createPositionTexture(), _positionRenderTarget);
     _copyTexture(_positionRenderTarget, _positionRenderTarget2);
@@ -195,5 +198,3 @@ function update(dt) {
     }
 
 }
-
-
